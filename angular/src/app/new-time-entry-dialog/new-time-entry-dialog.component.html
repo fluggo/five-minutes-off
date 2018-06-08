@@ -1,0 +1,28 @@
+<div class="modal-header">
+  <h4 class="modal-title">Test</h4>
+  <button type="button" class="close" aria-label="Close" (click)="activeModal.dismiss()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <div class="form-group">
+    <label for="minutes">Minutes to add (or subtract)</label>
+    <input class="form-control" type="text" [(ngModel)]="minutes" id="minutes">
+  </div>
+  <div class="form-group">
+    <label for="reason">Reason</label>
+    <input class="form-control" type="text" [(ngModel)]="reason" id="reason">
+  </div>
+  <div class="form-group text-right">
+    <div ngbDropdown class="d-inline-block" placement="bottom-right">
+      <button type="button" class="btn btn-sm btn-outline-primary" ngbDropdownToggle id="dropdown-recent-reasons">Recent reasons</button>
+      <div ngbDropdownMenu aria-labelledby="dropdown-recent-reasons">
+        <button class="dropdown-item">Not listening</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-sm btn-danger" (click)="activeModal.close()">Take away time</button>
+  <button type="button" class="btn btn-sm btn-secondary" (click)="activeModal.close()">Cancel</button>
+</div>
