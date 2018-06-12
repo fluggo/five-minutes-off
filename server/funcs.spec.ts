@@ -109,7 +109,7 @@ describe('Accounts', function() {
       return funcs.setWeek('skimpopple', WEEK1, 0).then(
         () => expect.fail(null, null, 'Expected error'),
         err => {
-          expect(err.code).to.equal('invalid-account');
+          expect(err.code).to.equal('account-not-found');
         }
       );
     });
@@ -117,8 +117,11 @@ describe('Accounts', function() {
     it("fails if time would go negative", async function() {
       await funcs.setWeek(ACCOUNT_ID, WEEK1, 100);
       await funcs.addTime(ACCOUNT_ID, WEEK1, -10, 'Not listening');
+
+      // Ensure there is now no time left; this should work
       await funcs.setWeek(ACCOUNT_ID, WEEK1, 10);
 
+      // Try to take the time remaining below zero now
       await funcs.setWeek(ACCOUNT_ID, WEEK1, 0).then(
         () => expect.fail(null, null, 'Expected error'),
         err => {
@@ -199,6 +202,89 @@ describe('Accounts', function() {
         () => expect.fail(null, null, 'Expected error'),
         err => {
           expect(err.code).to.equal('insufficient-time');
+        }
+      );
+    });
+  });
+
+  describe('getRecentReasons', function() {
+    beforeEach(async function() {
+      await cleanUp();
+      await Promise.all([
+        funcs.createAccountsTable(),
+        funcs.createWeeksTable(),
+      ]);
+      await funcs.createAccount(ACCOUNT_ID);
+    });
+
+    afterEach(function() {
+      return cleanUp();
+    });
+
+    const WEEK1 = '2018-W05';
+
+    it("fails if the accountID is invalid", function() {
+      return funcs.getRecentReasons('skimpopple', false, 0, 10).then(
+        () => expect.fail(null, null, 'Expected error'),
+        err => {
+          expect(err.code).to.equal('account-not-found');
+        }
+      );
+    });
+
+    it("provides recent negative reasons", async function() {
+      await funcs.setWeek(ACCOUNT_ID, WEEK1, 100);
+      await funcs.addTime(ACCOUNT_ID, WEEK1, -5, "Not listening");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, -10, "Not listening");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, -5, "Didn't clean up clothes");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, 5, "Brushed teeth without being told");
+
+      const reasons = await funcs.getRecentReasons(ACCOUNT_ID, false, 0, 10);
+
+      expect(reasons).to.deep.equal([
+        "Not listening",
+        "Didn't clean up clothes"
+      ]);
+    });
+
+    it("provides recent positive reasons", async function() {
+      await funcs.setWeek(ACCOUNT_ID, WEEK1, 100);
+      await funcs.addTime(ACCOUNT_ID, WEEK1, -5, "Not listening");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, -10, "Not listening");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, -5, "Didn't clean up clothes");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, 5, "Brushed teeth without being told");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, 5, "Did something awesome");
+      await funcs.addTime(ACCOUNT_ID, WEEK1, 5, "Did something awesome");
+
+      const reasons = await funcs.getRecentReasons(ACCOUNT_ID, true, 0, 10);
+
+      expect(reasons).to.deep.equal([
+        "Did something awesome",
+        "Brushed teeth without being told"
+      ]);
+    });
+
+    it("rejects invalid parameters", async function() {
+      await funcs.setWeek(ACCOUNT_ID, WEEK1, 300);
+
+      await funcs.getRecentReasons(ACCOUNT_ID, false, -1, 10).then(
+        () => expect.fail(null, null, 'Expected error'),
+        err => {
+          expect(err.code).to.equal('params-invalid');
+        }
+      );
+
+      await funcs.getRecentReasons(ACCOUNT_ID, false, 0, 0).then(
+        () => expect.fail(null, null, 'Expected error'),
+        err => {
+          expect(err.code).to.equal('params-invalid');
+        }
+      );
+
+      await funcs.getRecentReasons(ACCOUNT_ID, false, 0, -1).then(
+        () => expect.fail(null, null, 'Expected error'),
+        err => {
+          expect(err.code).to.equal('params-invalid');
         }
       );
     });

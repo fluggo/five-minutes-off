@@ -114,12 +114,6 @@ export function getRecentReasons(accountID: string, positive: boolean, from: num
 
       const result = Array.from(counts.entries()).sort((a, b) => (a[1] > b[1]) ? -1 : ((a[1] < b[1]) ? 1 : 0)).slice(from, from + size).map(r => r[0]);
       return Promise.resolve(result);
-    },
-    err => {
-      if(err.code === 'ResourceNotFoundException')
-        return Promise.reject(new ServerError('Account not found.', 'account-not-found'));
-
-      return Promise.reject(err);
     }
   );
 }
@@ -220,7 +214,7 @@ function addReason(accountID: string, positive: boolean, reason: string): Promis
   }).promise().then(
     response => {
       if(!response.Item)
-        return Promise.reject(new ServerError('Account not found.', 'missing-account'));
+        return Promise.reject(new ServerError('Account not found.', 'account-not-found'));
 
       // Amend the list and remove old entries
       const reasons: string[] = response.Item[REASONS_ATTRIBUTE];
@@ -253,7 +247,7 @@ export async function setWeek(accountID: string, weekID: string, minutesGranted:
     throw new ServerError('Invalid week specifier.', 'invalid-week');
 
   if(!(await checkAccount(accountID)))
-    throw new ServerError('Invalid account.', 'invalid-account');
+    throw new ServerError('Invalid account.', 'account-not-found');
 
   let week: WeekRecord = {
     accountID: accountID,
