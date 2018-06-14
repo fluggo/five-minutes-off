@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NewTimeEntryDialogComponent } from './new-time-entry-dialog.component';
+import { FormsModule } from '@angular/forms';
+import { NgbModule, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 describe('NewTimeEntryDialogComponent', () => {
   let component: NewTimeEntryDialogComponent;
@@ -8,7 +10,14 @@ describe('NewTimeEntryDialogComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ NewTimeEntryDialogComponent ]
+      declarations: [ NewTimeEntryDialogComponent ],
+      imports: [
+        FormsModule,
+        NgbModule.forRoot(),
+      ],
+      providers: [
+        NgbActiveModal
+      ]
     })
     .compileComponents();
   }));

@@ -1,0 +1,26 @@
+<div class="container d-flex flex-column h-100 justify-content-center bg-secondary">
+  <app-side-selector [currentItem]="currentChild" (nextClicked)="changeChild(1)" (previousClicked)="changeChild(-1)" [itemTemplate]="childSelector"></app-side-selector>
+  <app-side-selector [currentItem]="currentWeek" (nextClicked)="changeWeek(1)" (previousClicked)="changeWeek(-1)" [itemTemplate]="weekSelector"></app-side-selector>
+
+  <div *ngIf="!!weekRecord" class="d-flex flex-column h-100 justify-content-center" style="flex: 1">
+    <div class="text-center mb-4" style="font-size: 1.5rem;">
+      <div><i class="material-icons md-24 mr-1">access_time</i> <span>{{ weekRecord.minutesGranted | minutesDisplay }}</span></div>
+      <div><i class="material-icons mr-1">timelapse</i> <span>{{ minutesRemaining | minutesDisplay }} remaining</span></div>
+    </div>
+    <button type="button" class="btn btn-danger btn-lg m-2" (click)="openDialog(-5)">-5 minutes</button>
+    <button type="button" class="btn btn-danger btn-lg m-2" (click)="openDialog(-10)">-10 minutes</button>
+    <button type="button" class="btn btn-success btn-lg m-2 mt-4" (click)="openDialog(5)">+5 minutes</button>
+  </div>
+
+  <div *ngIf="!weekRecord" class="d-flex flex-column h-100 justify-content-center text-center" style="flex: 1;">
+    <app-set-week-entry [childID]="currentChild.childID" [weekID]="currentWeek"></app-set-week-entry>
+  </div>
+</div>
+
+<ng-template #childSelector let-child>
+  {{child ? child.name : '(no children defined)'}}
+</ng-template>
+
+<ng-template #weekSelector let-week>
+  {{weekStartDate(week) | date:'MMMM d':'UTC'}} &ndash; {{weekEndDate(week) | date:'MMMM d':'UTC'}}
+</ng-template>

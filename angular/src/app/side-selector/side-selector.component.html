@@ -1,0 +1,9 @@
+<ng-template #defaultTemplate let-name>{{name}}</ng-template>
+
+<div class="d-flex" style="height: 2em;">
+  <button type="button" aria-label="Previous" class="d-inline-block h-100" style="width: 2em; border: none; background-color: transparent;" (click)="previous()"><i class="material-icons md-18">arrow_left</i></button>
+  <div class="d-inline-block h-100 text-center" style="flex: 1;">
+    <ng-container *ngTemplateOutlet="itemTemplate; context: templateContext"></ng-container>
+  </div>
+  <button type="button" aria-label="Next" class="d-inline-block h-100" style="width: 2em; border: none; background-color: transparent;" (click)="next()"><i class="material-icons md-18">arrow_right</i></button>
+</div>

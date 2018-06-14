@@ -2,6 +2,23 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import * as d3timeFormat from 'd3-time-format';
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({ name: 'minutesDisplay' })
+export class MinutesDisplayPipe implements PipeTransform {
+  transform(value: number): string {
+    return minutesToDisplay(value);
+  }
+}
+
+export function minutesToDisplay(value: number): string {
+  const minutes = Math.floor(value) % 60;
+  const hours = Math.floor(value / 60);
+
+  const minutesStr = minutes.toFixed(0);
+
+  return `${hours.toFixed(0)}:${minutesStr.length === 1 ? '0' : ''}${minutesStr}`;
+}
 
 export interface TimeRecord {
   /** Number of minutes added (or removed). Cannot be zero. */
@@ -16,7 +33,7 @@ export interface TimeRecord {
 
 export interface WeekRecord {
   /** ISO 8601 week (e.g. "2018-W03"). */
-  weekId: string;
+  weekID: string;
 
   /** Number of minutes initially granted. */
   minutesGranted: number;
@@ -25,23 +42,35 @@ export interface WeekRecord {
   changes: TimeRecord[];
 }
 
-const isoWeekParser = d3timeFormat.timeParse('%Y-W%V');
+export interface Child {
+  name: string;
+  childID: string;
+}
+
+export interface AccountRecord {
+  children: Child[];
+}
+
+export const weekAsDate = d3timeFormat.utcParse('%Y-W%V');
+export const dateAsWeek = d3timeFormat.utcFormat('%Y-W%V');
 
 @Injectable()
 export abstract class TimeOffService {
-  abstract getRecentReasons(from: number, size: number): Observable<string[]>;
-
   /**
    * Adds or removes time.
-   * @param weekId ISO 8601 week (e.g. "2018-W03").
+   * @param weekID ISO 8601 week (e.g. "2018-W03").
    * @param minutes Minutes added (or removed). Cannot be zero.
    * @param reason Reason for the addition or removal. Cannot be empty.
    */
-  abstract addTime(weekId: string, minutes: number, reason: string): Observable<{}>;
+  abstract addTime(childID: string, weekID: string, minutes: number, reason: string): Observable<{}>;
 
-  abstract getWeek(weekId: string): Observable<WeekRecord>;
+  abstract getAccount(): Observable<AccountRecord>;
 
-  abstract setWeek(weekId: string, minutesGranted: number): Observable<WeekRecord>;
+  abstract getWeek(childID: string, weekID: string): Observable<WeekRecord | undefined>;
+
+  abstract setWeek(childID: string, weekID: string, minutesGranted: number): Observable<WeekRecord>;
+
+  abstract getRecentReasons(childID: string, from: number, size: number): Observable<string[]>;
 }
 
 interface RecentReason {
@@ -49,49 +78,88 @@ interface RecentReason {
   count: number;
 }
 
-@Injectable({ providedIn: 'root' })
-export class TimeOffMockService {
+/**
+ * Offsets the given week by a given number of weeks.
+ * @param weekID Week ID to adjust (e.g. 2018-W02).
+ * @param offset Weeks to go forward (or negative to go back).
+ */
+export function offsetWeek(weekID: string, offset: number): string {
+  let date = weekAsDate(weekID);
+
+  if(!date)
+    return weekID;
+
+  date = new Date(date.valueOf() + offset * 7 * 24 * 60 * 60 * 1000);
+  return dateAsWeek(date);
+}
+
+@Injectable()
+export class TimeOffMockService extends TimeOffService {
   recentReasons: RecentReason[];
-  weeks: Map<string, WeekRecord>;
+  weeks: Map<string, WeekRecord> = new Map();
+  children: Child[] = [
+    { name: 'Luke', childID: '100012022' },
+    { name: 'Leia', childID: '317298' }
+  ];
 
   constructor() {
+    super();
     this.recentReasons = [
       { reason: 'Not listening', count: 1 }
     ];
-    this.weeks = new Map();
+
+    const defaultWeekID = this.getCombinedWeekID('100012022', dateAsWeek(new Date()));
+
+    this.weeks.set(defaultWeekID, {
+      weekID: defaultWeekID,
+      minutesGranted: 300,
+      changes: [
+        { minutesAdded: -100, reason: 'Blew up the death star', time: new Date() }
+      ]
+    });
   }
 
-  getRecentReasons(from: number, size: number): Observable<string[]> {
+  getAccount(): Observable<AccountRecord> {
+    return of({ children: this.children });
+  }
+
+  getCombinedWeekID(childID: string, weekID: string) {
+    return `${childID}\0${weekID}`;
+  }
+
+  getRecentReasons(childID: string, from: number, size: number): Observable<string[]> {
     if(from < 0 || size <= 0)
-      return throwError({ text: 'From or size parameters invalid.' });
+      return throwError({ message: 'From or size parameters invalid.' });
 
     return of(this.recentReasons.slice(from, from + size).map(r => r.reason));
   }
 
-  addTime(weekId: string, minutes: number, reason: string): Observable<{}> {
+  addTime(childID: string, weekID: string, minutes: number, reason: string): Observable<{}> {
     // Ensure week is valid
-    if(!isoWeekParser(weekId))
-      return throwError({ text: 'Invalid week specifier.' });
+    if(!weekAsDate(weekID))
+      return throwError({ message: 'Invalid week specifier.' });
+
+    const combinedID = this.getCombinedWeekID(childID, weekID);
 
     minutes = Math.floor(minutes);
     reason = reason.trim();
 
     if(minutes === 0)
-      return throwError({ text: 'Minutes cannot be zero.' });
+      return throwError({ message: 'Minutes cannot be zero.' });
 
     if(reason === '')
-      return throwError({ text: 'Reason cannot be empty.' });
+      return throwError({ message: 'Reason cannot be empty.' });
 
-    const week = this.weeks.get(weekId);
+    const week = this.weeks.get(combinedID);
 
     if(!week)
-      return throwError({ text: 'Week has not been set up yet.' });
+      return throwError({ message: 'Week has not been set up yet.' });
 
     // Ensure we don't go negative
     const minutesLeft = week.changes.reduce<number>((count, record) => count + record.minutesAdded, week.minutesGranted);
 
     if(minutesLeft + minutes < 0)
-      return throwError({ text: `Cannot take away ${-minutes} minutes with only ${minutesLeft} minutes remaining.` });
+      return throwError({ message: `Cannot take away ${-minutes} minutes with only ${minutesLeft} minutes remaining.` });
 
     // Checks done, make the change happen
     week.changes.push({ reason: reason, minutesAdded: minutes, time: new Date() });
@@ -114,30 +182,45 @@ export class TimeOffMockService {
     this.recentReasons.sort((a, b) => (a.count > b.count) ? -1 : ((a.count < b.count) ? 1 : 0));
   }
 
-  setWeek(weekId: string, minutesGranted: number): Observable<WeekRecord> {
+  setWeek(childID: string, weekID: string, minutesGranted: number): Observable<WeekRecord> {
     minutesGranted = Math.floor(minutesGranted);
 
     if(minutesGranted < 0)
-      return throwError({ text: `Can't grant less than zero minutes.` });
+      return throwError({ message: `Can't grant less than zero minutes.` });
 
     // Ensure week is valid
-    if(!isoWeekParser(weekId))
-      return throwError({ text: 'Invalid week specifier.' });
+    if(!weekAsDate(weekID))
+      return throwError({ message: 'Invalid week specifier.' });
 
-    let week = this.weeks.get(weekId);
+    const combinedID = this.getCombinedWeekID(childID, weekID);
+    let week = this.weeks.get(combinedID);
 
     if(!week) {
-      week = { weekId: weekId, minutesGranted: minutesGranted, changes: [] };
-      this.weeks.set(weekId, week);
+      week = { weekID: weekID, minutesGranted: minutesGranted, changes: [] };
+      this.weeks.set(combinedID, week);
     }
 
     // Ensure we don't go negative
     const minutesLeft = week.changes.reduce<number>((count, record) => count + record.minutesAdded, minutesGranted);
 
     if(minutesLeft < 0)
-      return throwError({ text: `Granting that much time for the week would put the total time for the week less than zero.` });
+      return throwError({ message: `Granting that much time for the week would put the total time for the week less than zero.` });
 
     week.minutesGranted = minutesGranted;
     return of(week);
+  }
+
+  getWeek(childID: string, weekID: string): Observable<WeekRecord | undefined> {
+    // Ensure week is valid
+    if(!weekAsDate(weekID))
+      return throwError({ message: 'Invalid week specifier.' });
+
+    return new Observable<WeekRecord | undefined>(sub => {
+      const combinedID = this.getCombinedWeekID(childID, weekID);
+      const week = this.weeks.get(combinedID);
+
+      sub.next(week);
+      sub.complete();
+    });
   }
 }
