@@ -2,6 +2,7 @@ import { Component, OnInit, Injector } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TimeOffService, TimeOffMockService, Child, dateAsWeek, weekAsDate, WeekRecord, offsetWeek } from '../time-off.service';
 import { NewTimeEntryDialogComponent } from '../new-time-entry-dialog/new-time-entry-dialog.component';
+import { interval } from 'rxjs';
 import { ToastService } from '../toast.component';
 
 @Component({
@@ -110,7 +111,11 @@ export class TimeScreenComponent implements OnInit {
     const modalRef = this.modalService.open(NewTimeEntryDialogComponent, { injector: this.injector });
     const dialog = (modalRef.componentInstance as NewTimeEntryDialogComponent);
 
-    dialog.minutes = minutes;
-    dialog.childID = this.currentChild.childID;
+    dialog.setDefaults(this.currentChild.childID, this.currentWeek, minutes);
+
+    modalRef.result.then(
+      () => this.fetchWeek(),
+      () => {}
+    );
   }
 }

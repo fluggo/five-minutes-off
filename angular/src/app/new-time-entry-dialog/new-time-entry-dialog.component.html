@@ -5,26 +5,26 @@
   </button>
 </div>
 <div class="modal-body">
-  <form (ngSubmit)="submit()" #form="ngForm">
-    <div class="form-group" [class.has-danger]="minutesField.dirty && minutesField.invalid">
+  <form (ngSubmit)="submit()" [formGroup]="timeEntryForm">
+    <div class="form-group" [class.has-danger]="minutesInput.dirty && minutesInput.invalid">
       <label for="minutes">Minutes to add (or subtract)</label>
-      <input name="minutes" class="form-control" type="text" [(ngModel)]="minutes" id="minutes" required pattern="[-+]?\d+" #minutesField="ngModel">
+      <input formControlName="minutes" class="form-control" type="text" id="minutes">
     </div>
     <div class="form-group">
       <label for="reason">Reason</label>
-      <input name="reason" class="form-control" type="text" [(ngModel)]="reason" id="reason" required placeholder="Enter a reason" #reasonInput>
+      <input formControlName="reason" class="form-control" type="text" id="reason" placeholder="Enter a reason" #reasonInput>
     </div>
     <div class="form-group text-right">
       <div ngbDropdown class="d-inline-block" placement="bottom-right">
         <button type="button" class="btn btn-sm btn-outline-primary" ngbDropdownToggle id="dropdown-recent-reasons">Recent reasons</button>
         <div ngbDropdownMenu aria-labelledby="dropdown-recent-reasons">
-          <button *ngFor="let recentReason of recentReasons" class="dropdown-item" (click)="reason = recentReason;">{{recentReason}}</button>
+          <button type="button" *ngFor="let recentReason of recentReasons" class="dropdown-item" (click)="setReason(recentReason)">{{recentReason}}</button>
         </div>
       </div>
     </div>
   </form>
 </div>
 <div class="modal-footer">
-  <button type="button" class="btn btn-sm" [disabled]="!form.form.valid" [class.btn-danger]="minutes < 0" [class.btn-success]="minutes > 0" [class.btn-secondary]="minutes === 0" (click)="submit()">{{minutes < 0 ? 'Take away time' : 'Add time'}}</button>
-  <button type="button" class="btn btn-sm btn-secondary" (click)="activeModal.close()">Cancel</button>
+  <button type="submit" class="btn btn-sm" [disabled]="!timeEntryForm.valid" [class.btn-danger]="lastMinutes < 0" [class.btn-success]="lastMinutes > 0" [class.btn-secondary]="lastMinutes === 0" (click)="submit()">{{lastMinutes < 0 ? 'Take away time' : 'Add time'}}</button>
+  <button type="button" class="btn btn-sm btn-secondary" (click)="activeModal.dismiss()">Cancel</button>
 </div>

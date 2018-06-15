@@ -64,7 +64,7 @@ export class SetWeekEntryComponent implements OnInit, OnChanges {
         this.timeSet.emit();
       },
       err => {
-        this.toast.error(err);
+        this.toast.error('Failed to set the week\'s time.', err);
       }
     );
   }

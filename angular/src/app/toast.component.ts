@@ -17,14 +17,16 @@ export class ToastService {
     this.toastMessages.next({ message: message, type: type, durationMilliseconds: durationMilliseconds });
   }
 
-  error(err: any, type: ToastMessage['type'] = 'danger', durationMilliseconds = 4000): void {
-    if(!err)
+  error(context: string, err: any, type: ToastMessage['type'] = 'danger', durationMilliseconds = 4000): void {
+    this.toast(context, type, durationMilliseconds);
+
+/*    if(!err)
       return;
 
     if(typeof err.message === 'string')
       return this.toast(err.message, type, durationMilliseconds);
 
-    return this.toast(`${err}`, type, durationMilliseconds);
+    return this.toast(`${err}`, type, durationMilliseconds);*/
   }
 }
 
