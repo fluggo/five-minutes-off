@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Injector } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TimeOffService, TimeOffMockService, Child, dateAsWeek, weekAsDate, WeekRecord, offsetWeek } from '../time-off.service';
 import { NewTimeEntryDialogComponent } from '../new-time-entry-dialog/new-time-entry-dialog.component';
+import { ToastService } from '../toast.component';
 
 @Component({
   selector: 'app-time-screen',
@@ -20,7 +21,10 @@ export class TimeScreenComponent implements OnInit {
   weekRecord: WeekRecord | undefined;
   minutesRemaining: number;
 
-  constructor(private modalService: NgbModal, private timeOff: TimeOffService) { }
+  constructor(private modalService: NgbModal, private timeOff: TimeOffService, private toast: ToastService, private injector: Injector) {
+    if(timeOff instanceof TimeOffMockService)
+      timeOff.randomDelay = 500;
+  }
 
   ngOnInit() {
     this.changeChild(0);

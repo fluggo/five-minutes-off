@@ -42,17 +42,19 @@ describe('SetWeekEntryComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should update when the weekID changes', () => {
+  it('should update when the weekID changes', async () => {
     // Pick Luke's current week, which should have '5:00' as the time
     parentComponent.weekID = dateAsWeek(new Date());
     parentComponent.childID = '100012022';
     fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(component.timeString).toEqual('5:00');
 
     // Now on to an undefined week
     parentComponent.weekID = '2017-W03';
     fixture.detectChanges();
+    await fixture.whenStable();
 
     expect(component.timeString).toEqual('1:00');
   });

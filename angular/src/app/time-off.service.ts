@@ -3,6 +3,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import * as d3timeFormat from 'd3-time-format';
 import { Pipe, PipeTransform } from '@angular/core';
+import { delay } from 'rxjs/operators';
 
 @Pipe({ name: 'minutesDisplay' })
 export class MinutesDisplayPipe implements PipeTransform {
@@ -70,10 +71,11 @@ export abstract class TimeOffService {
 
   abstract setWeek(childID: string, weekID: string, minutesGranted: number): Observable<WeekRecord>;
 
-  abstract getRecentReasons(childID: string, from: number, size: number): Observable<string[]>;
+  abstract getRecentReasons(childID: string, positive: boolean, from: number, size: number): Observable<string[]>;
 }
 
 interface RecentReason {
+  positive: boolean;
   reason: string;
   count: number;
 }
@@ -95,6 +97,7 @@ export function offsetWeek(weekID: string, offset: number): string {
 
 @Injectable()
 export class TimeOffMockService extends TimeOffService {
+  randomDelay = 0;
   recentReasons: RecentReason[];
   weeks: Map<string, WeekRecord> = new Map();
   children: Child[] = [
@@ -105,7 +108,9 @@ export class TimeOffMockService extends TimeOffService {
   constructor() {
     super();
     this.recentReasons = [
-      { reason: 'Not listening', count: 1 }
+      { positive: false, reason: 'Not listening', count: 10 },
+      { positive: false, reason: 'Picked nose', count: 5 },
+      { positive: true, reason: 'Brushed teeth without being told', count: 6 },
     ];
 
     const defaultWeekID = this.getCombinedWeekID('100012022', dateAsWeek(new Date()));
@@ -120,18 +125,22 @@ export class TimeOffMockService extends TimeOffService {
   }
 
   getAccount(): Observable<AccountRecord> {
-    return of({ children: this.children });
+    return of({ children: this.children }).pipe(delay(Math.random() * this.randomDelay));
   }
 
   getCombinedWeekID(childID: string, weekID: string) {
     return `${childID}\0${weekID}`;
   }
 
-  getRecentReasons(childID: string, from: number, size: number): Observable<string[]> {
+  getRecentReasons(childID: string, positive: boolean, from: number, size: number): Observable<string[]> {
     if(from < 0 || size <= 0)
       return throwError({ message: 'From or size parameters invalid.' });
 
-    return of(this.recentReasons.slice(from, from + size).map(r => r.reason));
+    return of(
+      this.recentReasons.filter(r => r.positive === positive)
+        .slice(from, from + size)
+        .map(r => r.reason)
+    ).pipe(delay(Math.random() * this.randomDelay));
   }
 
   addTime(childID: string, weekID: string, minutes: number, reason: string): Observable<{}> {
@@ -165,16 +174,16 @@ export class TimeOffMockService extends TimeOffService {
     week.changes.push({ reason: reason, minutesAdded: minutes, time: new Date() });
 
     // Update the recently used reason list
-    this.addReason(reason);
+    this.addReason(reason, minutes > 0);
 
-    return of({});
+    return of({}).pipe(delay(Math.random() * this.randomDelay));
   }
 
-  private addReason(reason: string) {
-    let recentReason = this.recentReasons.find(r => r.reason === reason);
+  private addReason(reason: string, positive: boolean) {
+    let recentReason = this.recentReasons.find(r => r.reason === reason && r.positive === positive);
 
     if(!recentReason) {
-      recentReason = { reason: reason, count: 0 };
+      recentReason = { positive: positive, reason: reason, count: 0 };
       this.recentReasons.push(recentReason);
     }
 
@@ -207,7 +216,7 @@ export class TimeOffMockService extends TimeOffService {
       return throwError({ message: `Granting that much time for the week would put the total time for the week less than zero.` });
 
     week.minutesGranted = minutesGranted;
-    return of(week);
+    return of(week).pipe(delay(Math.random() * this.randomDelay));
   }
 
   getWeek(childID: string, weekID: string): Observable<WeekRecord | undefined> {
@@ -221,6 +230,6 @@ export class TimeOffMockService extends TimeOffService {
 
       sub.next(week);
       sub.complete();
-    });
+    }).pipe(delay(Math.random() * this.randomDelay));
   }
 }
