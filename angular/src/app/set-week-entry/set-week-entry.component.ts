@@ -1,7 +1,8 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { TimeOffService, offsetWeek, minutesToDisplay } from '../time-off.service';
+import { Component, OnInit, Input, Output, OnChanges, SimpleChanges, EventEmitter } from '@angular/core';
+import { TimeOffService, offsetWeek, minutesToDisplay, displayToMinutes } from '../time-off.service';
 import { Observable, of } from 'rxjs';
 import * as rxjs from 'rxjs/operators';
+import { ToastService } from '../toast.component';
 
 @Component({
   selector: 'app-set-week-entry',
@@ -11,9 +12,10 @@ import * as rxjs from 'rxjs/operators';
 export class SetWeekEntryComponent implements OnInit, OnChanges {
   @Input() childID: string;
   @Input() weekID: string;
+  @Output() timeSet: EventEmitter<void> = new EventEmitter();
   timeString = '1:00';
 
-  constructor(private timeOff: TimeOffService) { }
+  constructor(private timeOff: TimeOffService, private toast: ToastService) { }
 
   ngOnInit() {
   }
@@ -44,4 +46,26 @@ export class SetWeekEntryComponent implements OnInit, OnChanges {
     }
   }
 
+  timeIsValid(): boolean {
+    const minutes = displayToMinutes(this.timeString);
+    return minutes !== undefined && minutes >= 0;
+  }
+
+  setTime() {
+    const minutes = displayToMinutes(this.timeString);
+
+    if(!minutes) {
+      this.toast.toast('The given time is invalid.', 'danger');
+      return;
+    }
+
+    this.timeOff.setWeek(this.childID, this.weekID, minutes).subscribe(
+      res => {
+        this.timeSet.emit();
+      },
+      err => {
+        this.toast.error(err);
+      }
+    );
+  }
 }

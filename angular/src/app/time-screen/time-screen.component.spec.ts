@@ -6,6 +6,7 @@ import { SetWeekEntryComponent } from '../set-week-entry/set-week-entry.componen
 import { MinutesDisplayPipe } from '../time-off.service';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { ToastService } from '../toast.component';
 
 describe('TimeScreenComponent', () => {
   let component: TimeScreenComponent;
@@ -22,6 +23,9 @@ describe('TimeScreenComponent', () => {
       imports: [
         FormsModule,
         NgbModule.forRoot(),
+      ],
+      providers: [
+        ToastService,
       ]
     })
     .compileComponents();

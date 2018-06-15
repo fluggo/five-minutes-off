@@ -12,8 +12,8 @@
     <button type="button" class="btn btn-success btn-lg m-2 mt-4" (click)="openDialog(5)">+5 minutes</button>
   </div>
 
-  <div *ngIf="!weekRecord" class="d-flex flex-column h-100 justify-content-center text-center" style="flex: 1;">
-    <app-set-week-entry [childID]="currentChild.childID" [weekID]="currentWeek"></app-set-week-entry>
+  <div *ngIf="!weekRecord && !!currentChild" class="d-flex flex-column h-100 justify-content-center text-center" style="flex: 1;">
+    <app-set-week-entry [childID]="currentChild.childID" [weekID]="currentWeek" (timeSet)="fetchWeek()"></app-set-week-entry>
   </div>
 </div>
 

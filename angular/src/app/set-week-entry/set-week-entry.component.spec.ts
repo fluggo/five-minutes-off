@@ -5,6 +5,7 @@ import { TimeOffService, TimeOffMockService, dateAsWeek } from '../time-off.serv
 import { FormsModule } from '@angular/forms';
 import { Component } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { ToastService } from '../toast.component';
 
 @Component({
   template: '<app-set-week-entry [childID]="childID" [weekID]="weekID"></app-set-week-entry>'
@@ -23,6 +24,7 @@ describe('SetWeekEntryComponent', () => {
     TestBed.configureTestingModule({
       declarations: [ TestHostComponent, SetWeekEntryComponent ],
       providers: [
+        ToastService,
         { provide: TimeOffService, useClass: TimeOffMockService }
       ],
       imports: [

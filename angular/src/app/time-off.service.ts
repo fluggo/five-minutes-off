@@ -21,6 +21,24 @@ export function minutesToDisplay(value: number): string {
   return `${hours.toFixed(0)}:${minutesStr.length === 1 ? '0' : ''}${minutesStr}`;
 }
 
+export function displayToMinutes(value: string): number | undefined {
+  const splitValue = value.split(':');
+  let minutes: number, hours = 0;
+
+  if(splitValue.length === 1) {
+    minutes = parseInt(splitValue[0], 10);
+  }
+  else if(splitValue.length === 2) {
+    hours = parseInt(splitValue[0], 10);
+    minutes = parseInt(splitValue[1], 10);
+  }
+  else {
+    return undefined;
+  }
+
+  return hours * 60 + minutes;
+}
+
 export interface TimeRecord {
   /** Number of minutes added (or removed). Cannot be zero. */
   minutesAdded: number;
