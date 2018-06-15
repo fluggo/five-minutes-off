@@ -3,6 +3,8 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { NewTimeEntryDialogComponent } from './new-time-entry-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { NgbModule, NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { ToastService } from '../toast.component';
+import { TimeOffService, TimeOffMockService } from '../time-off.service';
 
 describe('NewTimeEntryDialogComponent', () => {
   let component: NewTimeEntryDialogComponent;
@@ -16,7 +18,9 @@ describe('NewTimeEntryDialogComponent', () => {
         NgbModule.forRoot(),
       ],
       providers: [
-        NgbActiveModal
+        NgbActiveModal,
+        ToastService,
+        { provide: TimeOffService, useClass: TimeOffMockService },
       ]
     })
     .compileComponents();

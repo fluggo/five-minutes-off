@@ -104,7 +104,13 @@ export class TimeScreenComponent implements OnInit {
   }
 
   openDialog(minutes: number) {
-    const modalRef = this.modalService.open(NewTimeEntryDialogComponent);
-    (modalRef.componentInstance as NewTimeEntryDialogComponent).minutes = minutes;
+    if(!this.currentChild)
+      return;
+
+    const modalRef = this.modalService.open(NewTimeEntryDialogComponent, { injector: this.injector });
+    const dialog = (modalRef.componentInstance as NewTimeEntryDialogComponent);
+
+    dialog.minutes = minutes;
+    dialog.childID = this.currentChild.childID;
   }
 }
