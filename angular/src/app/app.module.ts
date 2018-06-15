@@ -9,6 +9,8 @@ import { SideSelectorComponent } from './side-selector/side-selector.component';
 import { TimeOffService, TimeOffMockService, MinutesDisplayPipe } from './time-off.service';
 import { TimeScreenComponent } from './time-screen/time-screen.component';
 import { SetWeekEntryComponent } from './set-week-entry/set-week-entry.component';
+import { ToastComponent } from './toast.component';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   declarations: [
@@ -18,11 +20,13 @@ import { SetWeekEntryComponent } from './set-week-entry/set-week-entry.component
     TimeScreenComponent,
     MinutesDisplayPipe,
     SetWeekEntryComponent,
+    ToastComponent,
   ],
   imports: [
     BrowserModule,
     NgbModule.forRoot(),
     FormsModule,
+    BrowserAnimationsModule,
   ],
   entryComponents: [
     NewTimeEntryDialogComponent,

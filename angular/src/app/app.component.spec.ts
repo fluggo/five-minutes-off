@@ -6,6 +6,7 @@ import { SetWeekEntryComponent } from './set-week-entry/set-week-entry.component
 import { MinutesDisplayPipe } from './time-off.service';
 import { FormsModule } from '@angular/forms';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { ToastComponent } from './toast.component';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
@@ -16,6 +17,7 @@ describe('AppComponent', () => {
         SideSelectorComponent,
         SetWeekEntryComponent,
         MinutesDisplayPipe,
+        ToastComponent,
       ],
       imports: [
         FormsModule,
