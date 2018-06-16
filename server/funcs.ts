@@ -4,6 +4,10 @@ import * as d3timeFormat from 'd3-time-format';
 import { reject } from 'async';
 import uuidv1 = require('uuid/v1');
 
+// Use Bluebird promises for their async stack trace ability
+import * as BluebirdPromise from 'bluebird';
+global.Promise = BluebirdPromise;
+aws.config.setPromisesDependency(BluebirdPromise);
 class ServerError extends Error {
   code: string;
 
